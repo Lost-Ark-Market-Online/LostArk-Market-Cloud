@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@lamo/bot": "github:Lost-Ark-Market-Online/LostArk-Market-Discord-Bot#firebase-prep",
     "@types/p-limit": "^2.2.0",
     "apicache": "^1.6.3",
     "cors": "^2.8.5",

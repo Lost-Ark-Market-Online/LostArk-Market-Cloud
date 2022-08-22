@@ -46,14 +46,14 @@ async function _getItems(
  * Export Market live data
  * @param {Firestore} firestore The firestore app instance.
  * @param {Request} req The express request.
- * @param {Response} res The express response.
+ * @param {Response?} res The express response.
  * @return {Response} Market Live data.
  */
 export async function exportMarket(
     firestore: Firestore,
     req: Request,
-    res: Response
-): Promise<Response> {
+    res?: Response
+): Promise<any> {
   const {region} = req.params;
   const {
     format,
@@ -65,10 +65,12 @@ export async function exportMarket(
     search,
   } = req.query;
   if (!category && !subcategory && !categories && !items && !ids && !search) {
-    return res.status(400).send(
-        "You need to specify a filter: "+
-        "category, subcategory, categories, items, ids or search"
-    );
+    const errMessage = "You need to specify a filter: "+
+    "category, subcategory, categories, items, ids or search";
+    if (!res) {
+      throw Error(errMessage);
+    }
+    return res.status(400).send(errMessage);
   }
   let docs: DocumentData[] = [];
   if (items) {
@@ -112,6 +114,9 @@ export async function exportMarket(
     docs = snapshot.docs;
   }
   if (docs.length==0) {
+    if (!res) {
+      throw Error("Not found");
+    }
     return res.sendStatus(404);
   }
   const data = docs.map((doc) => ({
@@ -147,8 +152,14 @@ export async function exportMarket(
         "updatedAt",
       ],
     });
+    if (!res) {
+      return parser.parse(data);
+    }
     res.attachment(`${region}-${new Date().getTime()}.csv`);
     return res.send(parser.parse(data));
+  }
+  if (!res) {
+    return data;
   }
   return res.json(data);
 }

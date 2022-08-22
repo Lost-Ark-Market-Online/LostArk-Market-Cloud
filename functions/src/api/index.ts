@@ -3,7 +3,12 @@ import * as cors from "cors";
 import {https} from "firebase-functions";
 import {exportMarket, exportMarketItem} from "./exportCsv";
 import {middleware as apicache} from "apicache";
+import {
+  Command,
+  InteractionsController as discordInteraction,
+} from "@lamo/bot";
 
+import type {Request} from "express";
 import type {Firestore} from "firebase-admin/firestore";
 import type {HttpsFunction} from "firebase-functions";
 
@@ -26,6 +31,13 @@ export function apiServiceFactory(fs: Firestore): HttpsFunction {
       cache("1 day"),
       async (req, res) =>
         exportMarketItem(fs, req, res)
+  );
+  app.post("*/discord-bot/interactions",
+      async (req, res) =>
+        discordInteraction(req, res, undefined, {
+          [Command.PRICES]: async (request: Request)=>
+            exportMarket(fs, request),
+        }),
   );
   return https.onRequest(app);
 }
